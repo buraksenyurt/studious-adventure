@@ -98,6 +98,7 @@ namespace ToyApi.Db.Models
         public string Nickname { get; set; }
         public string Description { get; set; }
         public DateTime LastUpdated { get; set; }
+        public int Like { get; set; }
         public string Photo { get; set; }
     }
 }
@@ -243,4 +244,206 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
     endpoints.MapHub<ToyApiHub>("/ToyApiHub");
 });
+```
+
+## 6 - Repository tiplerinin eklenmesi
+
+Db klasörü altına IToyRepository ve ToyRepository sınıflarını ekle.
+
+IToyRepository.cs
+
+```csharp
+using System.Collections.Generic;
+using ToyApi.Db.Models;
+
+namespace ToyApi.Db
+{
+    public interface IToyRepository
+    {
+        IEnumerable<Toy> GetTopFive();
+        int Create(Toy toy);
+        Toy Update(Toy toy);
+    }
+}
+```
+
+ToyRepository.cs
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ToyApi.Db.Models;
+
+namespace ToyApi.Db
+{
+    public class ToyRepository
+        : IToyRepository
+    {
+        private readonly MyFavoriteToyDbContext _dbContext;
+        public ToyRepository(MyFavoriteToyDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        public int Create(Toy toy)
+        {
+            var newId = _dbContext.Toys.Select(t => t.ToyId).Max() + 1;
+            toy.ToyId = newId;
+            toy.LastUpdated = DateTime.Now;
+
+            _dbContext.Toys.Add(toy);
+            var inserted=_dbContext.SaveChanges();
+            return inserted;
+        }
+
+        public IEnumerable<Toy> GetTopFive()
+        {
+            var result = _dbContext.Toys.OrderBy(t => t.Like).Take(5);
+            return result;
+        }
+
+        public Toy Update(Toy toy)
+        {
+            var current = _dbContext.Toys.FirstOrDefault(t => t.ToyId == toy.ToyId);
+            if(current!=null)
+            {
+                current.LastUpdated = toy.LastUpdated;
+                current.Like = toy.Like;
+                current.Nickname = toy.Nickname;
+                current.Description = toy.Description;
+                current.Photo = toy.Photo;
+
+                _dbContext.SaveChanges();
+
+                return current;
+            }
+            return null;
+        }
+    }
+}
+```
+
+IToyRepository bağımlılığı için ConfigureServices metoduna DI bildirimini ekle.
+
+```csharp
+services.AddScoped<IToyRepository, ToyRepository>();
+```
+
+## 7 - Controller Sınıfının Eklenmesi
+
+Controller klasörüne ToyController sınıfını ekle.
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using ToyApi.Db;
+using ToyApi.Db.Models;
+
+namespace ToyApi.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ToyController : ControllerBase
+    {
+        private readonly IToyRepository _toyRepository;
+        private readonly IHubContext<ToyApiHub> _hubContext;
+
+        public ToyController(IToyRepository toyRepository, IHubContext<ToyApiHub> hubContext)
+        {
+            _toyRepository = toyRepository;
+            _hubContext = hubContext;
+        }
+
+        [HttpGet()]
+        [Route("TopFive")]
+        public IActionResult GetTopFive()
+        {
+            var topFive = _toyRepository.GetTopFive();
+            return Ok(topFive);
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] Toy toy)
+        {
+            var inserted = _toyRepository.Create(toy);
+            if (inserted > 0)
+            {
+                _hubContext.Clients.All.SendAsync("NotifyNewToyAdded", toy.ToyId, toy.Nickname);
+                return Ok("New toy has been added successfully.");
+            }
+
+            return BadRequest();
+        }
+
+        [HttpPut]
+        public IActionResult Update([FromBody] Toy toy)
+        {
+            var updated = _toyRepository.Update(toy);
+            if (updated != null)
+            {
+                return Ok("Toy has been updated successfully.");
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+    }
+}
+```
+
+## 8 - WebAPI servisinin çalıştırılıp denenmesi
+
+Örneği çalıştır https://localhost:5001/swagger/index.html Swagger adresinden metotlarını dene.
+
+Örnek Get;
+```text`
+https://localhost:5001/api/Toy/TopFive
+```
+
+Örnek Create;
+
+```json
+{
+  "nickname": "Obi Wan Ruhu",
+  "description": "Obi wan'ın gemisini yaptığım lego",
+  "like": 1
+}
+```
+
+Örnek Update;
+
+```json
+{
+  "toyId": 3,
+  "nickname": "Obi Wan's Spirit",
+  "description": "Obi wan'ın gemisinin Legosu. Bir öğleden sonramı harika geçirmemi sağlamıştı.",
+  "lastUpdated": "2021-05-08T18:22:18.104Z",
+  "like": 9
+}
+```
+
+## 9 - Farklı Domain'lerin WebAPI'yi Kullanabilmesi için CORS Eklenmesi
+
+CORS: Cross-Origin Resource Sharing
+
+ConfigureServices metoduna aşağıdaki kısmı ekle.
+
+```csharp
+services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+```
+
+Ayrıca Configure metodunda aşağıdaki satırı ekleyerek CORS middleware'ini etkinleştir.
+
+```csharp
+app.UseCors();
 ```
