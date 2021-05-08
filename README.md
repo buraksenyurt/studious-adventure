@@ -204,3 +204,43 @@ dotnet ef database update
 ```
 
 ## 5 - SignalR Entegrasyonu
+
+WebAPI projesinin root klasörüne ToyApiHub isimli sınıfı ekle.
+
+```csharp
+using Microsoft.AspNetCore.SignalR;
+
+namespace ToyApi
+{
+    public class ToyApiHub
+        :Hub
+    {
+    }
+}
+```
+
+SignalR ve ResponseCompression servislerini DI'a ekle. (ConfigureServices metodu)
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddSignalR();
+    services.AddResponseCompression(options =>
+    {
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
+    });
+    services.AddDbContext<MyFavoriteToyDbContext>(options =>
+    {
+        options.UseNpgsql(Configuration.GetConnectionString("DevConStr"));
+    });
+```
+
+Startup sınıfındaki Configure metodunda Hub için Route bildirimini ekle.
+
+```csharp
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapHub<ToyApiHub>("/ToyApiHub");
+});
+```
