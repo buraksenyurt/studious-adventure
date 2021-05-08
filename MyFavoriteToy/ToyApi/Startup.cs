@@ -44,6 +44,16 @@ namespace ToyApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ToyApi", Version = "v1" });
             });
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +69,7 @@ namespace ToyApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseCors();
 
             app.UseAuthorization();
 
@@ -66,7 +77,7 @@ namespace ToyApi
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<ToyApiHub>("/ToyApiHub");
-            });
+            });            
         }
     }
 }
