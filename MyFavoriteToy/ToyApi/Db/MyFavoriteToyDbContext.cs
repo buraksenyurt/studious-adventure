@@ -23,6 +23,7 @@ namespace ToyApi.Db
                 Nickname = "Kırmızı Şimşek",
                 Description = "En sevdiğim oyuncak arabamdır :)",
                 LastUpdated = DateTime.Now.AddDays(-1),
+                Like=5,
                 Photo = PhotoUtility.GetBase64("kirmizi_simsek.jpg", "image/jpeg")
             });
 
@@ -32,6 +33,7 @@ namespace ToyApi.Db
                 Nickname = "Çekici Meytır",
                 Description = "Oğlumla severek izlediğim animasyonlardan Cars'ın eğlenceli karakteri Meytır.",
                 LastUpdated = DateTime.Now,
+                Like=7,
                 Photo = PhotoUtility.GetBase64("cekici_meytir.jpg", "image/jpeg")
             });
         }
