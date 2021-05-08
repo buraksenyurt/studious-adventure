@@ -1,0 +1,30 @@
+version: '3.4'
+ 
+services:
+ 
+  postgresql_database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=scoth
+      - POSTGRES_PASSWORD=tiger
+      - POSTGRES_DB=MyFavoriteToyDb
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+     
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=scoth@tiger.com
+      - PGADMIN_DEFAULT_PASSWORD=tiger
+    ports:
+      - "5050:80"
+    restart: always
+    volumes:
+      - pgadmin:/root/.pgadmin
+ 
+volumes:
+  database-data:
+  pgadmin:
