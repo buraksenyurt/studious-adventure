@@ -70,3 +70,15 @@ Maintanance database    :   MyFavoriteToyDb
 Username                :   scoth
 Password                :   tiger
 ```
+
+## 3 - Web API Projesine gerekli NuGet paketlerinin eklenmesi
+
+```bash
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 5.0.5.1
+dotnet add package Microsoft.EntityFrameworkCore --version 5.0.5
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 5.0.5
+dotnet tool install --global dotnet-ef
+```
+
+## 4 - Model ve DbContext sınıflarının oluşturulması
+
