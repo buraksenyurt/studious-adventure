@@ -447,3 +447,178 @@ Ayrıca Configure metodunda aşağıdaki satırı ekleyerek CORS middleware'ini 
 ```csharp
 app.UseCors();
 ```
+
+## 10 - Blazor Server Projesinin Oluşturulması
+
+```bash
+dotnet new blazorserver -o Toy.BlazorServer
+dotnet sln add .\Toy.BlazorServer\
+```
+
+## 11 - Blazor Server projesine model sınıfının eklenmesi
+
+Data klasörüne Toy sınıfını ekle.
+
+```csharp
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Toy.BlazorServer.Data
+{
+    public class Toy
+    {
+        public int ToyId { get; set; }
+        [Required]
+        [MinLength(10,ErrorMessage ="Yaratıcı düşün. Güzel bir oyuncak adı ver")]
+        [MaxLength(30,ErrorMessage ="O kadar da uzun bir isim olmasın")]
+        public string Nickname { get; set; }
+        [Required]
+        [MinLength(20, ErrorMessage = "Yaratıcı düşün. Onun hakkında daha fazla şey söyle")]
+        [MaxLength(250, ErrorMessage = "O kadar da uzun bir açıklama olmasın")]
+        public string Description { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public int Like { get; set; }
+        public string Photo { get; set; }
+    }
+}
+```
+
+## 12 - Blazor Server uygulamasında Web API iletişimi için servis entegrasyonunun yapılması.
+
+SignalR iletişimi için gerekli paketi ekle.
+
+```bash
+dotnet add package Microsoft.AspNetCore.SignalR.Client -v 5.0.5
+```
+
+Data klasörüne ToyService sınıfını ekle.
+
+```csharp
+using Microsoft.AspNetCore.SignalR.Client;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace Toy.BlazorServer.Data
+{
+    public class ToyService
+    {
+        private readonly HttpClient _httpClient;
+        private HubConnection _hubConnection;
+        public int NewToyId { get; set; }
+        public string NewToyNickName { get; set; }
+        public event Action OnChange;
+        public ToyService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public async Task<IEnumerable<Toy>> GetTopFiveAsync()
+        {
+            var response = await _httpClient.GetAsync("/api/toy/topfive");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            var data = JsonSerializer.Deserialize<IEnumerable<Toy>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return data;
+        }
+
+        public async Task UpdateAsync(Toy toy)
+        {
+            var response = await _httpClient.PutAsJsonAsync("/api/toy", toy);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task InitSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{_httpClient.BaseAddress.AbsoluteUri}ToyApiHub")
+                .Build();
+
+            _hubConnection.On<int, string>("NotifyNewToyAdded", (id, nickName) =>
+            {
+                NewToyId = id;
+                NewToyNickName = nickName;
+                NotifyStateChanged();
+            });
+
+            await _hubConnection.StartAsync();
+        }
+
+        private void NotifyStateChanged() => OnChange?.Invoke();
+    }
+}
+```
+
+appSetting.json dosyasına WebApi base address için tanım ekle.
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "ToyApiBaseUrl": "https://localhost:44374/",
+  "AllowedHosts": "*"
+}
+```
+
+DI container servisine HttpClient Servisini kaydet. (ConfigureServices metodu)
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddHttpClient<ToyService>(client =>
+    {
+        client.BaseAddress = new Uri(Configuration["ToyApiBaseUrl"]);
+    });
+    services.AddRazorPages();
+    services.AddServerSideBlazor();
+}
+```
+
+## 13 - Blazor Server uygulamasındaki bileşenlerin değişiklikleri takip etmesi için State sınıfının eklenmesi
+
+Data klasörüne AppState isimli sınıfı ekle.
+
+```csharp
+using System;
+
+namespace Toy.BlazorServer.Data
+{
+    public class AppState
+    {
+        public Toy CurrentToy { get; private set; }
+        public event Action OnChange;
+
+        public void SetAppState(Toy toy)
+        {
+            CurrentToy = toy;
+            NotifyStateChanged();
+        }
+
+        public void NotifyStateChanged() => OnChange?.Invoke();
+    }
+}
+```
+
+AppState sınıfını DI Container servislerine kayıt et.(ConfigureServices metodu)
+
+```csharp
+services.AddScoped<AppState>();
+```
+
+## 14 -
+
+## 15 - 
+
+## 16 -
+
+## 17 -
+
+//DEVAM EDİYOR
