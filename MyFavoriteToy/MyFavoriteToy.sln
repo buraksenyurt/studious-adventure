@@ -5,6 +5,8 @@ VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToyApi", "ToyApi\ToyApi.csproj", "{21D858FD-5B93-4F8D-A32E-07902A3CA040}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toy.BlazorServer", "Toy.BlazorServer\Toy.BlazorServer.csproj", "{357D498A-DCA6-4116-8BE6-0C6761A1C341}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,17 @@ Global
 		{21D858FD-5B93-4F8D-A32E-07902A3CA040}.Release|x64.Build.0 = Release|Any CPU
 		{21D858FD-5B93-4F8D-A32E-07902A3CA040}.Release|x86.ActiveCfg = Release|Any CPU
 		{21D858FD-5B93-4F8D-A32E-07902A3CA040}.Release|x86.Build.0 = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|x64.Build.0 = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Debug|x86.Build.0 = Debug|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|Any CPU.Build.0 = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|x64.ActiveCfg = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|x64.Build.0 = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|x86.ActiveCfg = Release|Any CPU
+		{357D498A-DCA6-4116-8BE6-0C6761A1C341}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
