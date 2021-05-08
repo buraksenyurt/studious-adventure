@@ -38,6 +38,7 @@ namespace ToyApi
             {
                 options.UseNpgsql(Configuration.GetConnectionString("DevConStr"));
             });
+            services.AddScoped<IToyRepository, ToyRepository>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
