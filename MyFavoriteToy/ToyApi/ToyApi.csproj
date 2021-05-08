@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="Db\Images\" />
   </ItemGroup>
 
 </Project>

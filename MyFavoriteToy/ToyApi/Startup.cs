@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using ToyApi.Db;
 
 namespace ToyApi
 {
@@ -26,7 +28,10 @@ namespace ToyApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddDbContext<MyFavoriteToyDbContext>(options =>
+            {
+                options.UseNpgsql(Configuration.GetConnectionString("DevConStr"));
+            });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
