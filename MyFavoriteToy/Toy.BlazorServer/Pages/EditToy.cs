@@ -7,7 +7,7 @@ namespace Toy.BlazorServer.Pages
     public partial class EditToy
     {
         [Parameter]
-        public ToyModel Toy { get; set; }
+        public ToyModel ToyModel { get; set; }
         private ToyModel ToyBackup { get; set; }
         public bool IsPreviewMode { get; set; } = false;
 
@@ -15,30 +15,29 @@ namespace Toy.BlazorServer.Pages
         {
             ToyBackup = new ToyModel
             {
-                ToyId=Toy.ToyId,
-                Nickname=Toy.Nickname,
-                Description=Toy.Description,
-                Photo=Toy.Photo,
-                Like=Toy.Like,
-                LastUpdated=Toy.LastUpdated
+                ToyId= ToyModel.ToyId,
+                Nickname= ToyModel.Nickname,
+                Description= ToyModel.Description,
+                Photo= ToyModel.Photo,
+                Like= ToyModel.Like,
+                LastUpdated= ToyModel.LastUpdated
             };
         }
 
         protected async Task HandleValidSubmit()
         {
-            await _toyService.UpdateAsync(Toy);
+            await _toyService.UpdateAsync(ToyModel);
             IsPreviewMode = true;
-            _appState.SetAppState(Toy);
-
+            _appState.SetAppState(ToyModel);
         }
 
         protected void HandleUndoChanges()
         {
             IsPreviewMode = true;
-            if(Toy.Nickname.Trim()!=ToyBackup.Nickname.Trim()
-                ||Toy.Description.Trim()!=ToyBackup.Description.Trim())
+            if(ToyModel.Nickname.Trim()!=ToyBackup.Nickname.Trim()
+                || ToyModel.Description.Trim()!=ToyBackup.Description.Trim())
             {
-                Toy = ToyBackup;
+                ToyModel = ToyBackup;
                 _appState.SetAppState(ToyBackup);
             }
         }

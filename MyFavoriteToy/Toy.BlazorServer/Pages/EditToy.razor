@@ -4,17 +4,17 @@
 
 @if(IsPreviewMode)
 {
-    <ViewToy Toy="Toy"/>
+    <ViewToy ToyModel="ToyModel"/>
 }
 else
 {
-    <EditForm Model="@Toy" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
         <div class="card-body">
             <DataAnnotationsValidator/>
             Nickname : 
-            <InputText class="form-control" @bind-Value="Toy.Nickname"/>
+            <InputText class="form-control" @bind-Value="ToyModel.Nickname"/>
             Description :
-            <InputTextArea class="form-control" @bind-Value="Toy.Description"/>
+            <InputTextArea class="form-control" @bind-Value="ToyModel.Description"/>
             <br/>
             <button type="submit" class="btn btn-outline-primary">Kaydet</button>
             <button type="button" class="btn btn-outline-light" @onclick="HandleUndoChanges">Geri Al</button>
