@@ -1,0 +1,40 @@
+﻿@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+
+@if (IsEditMode)
+{
+    <EditToy ToyModel="ToyModel" />
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">@ToyModel.Nickname</h4>
+            <p class="card-text">
+                <i>@ToyModel.Description</i>
+            </p>
+            <p>
+                <b>@ToyModel.Like</b> defa beğenildi.
+                <br />
+                Son güncelleme @ToyModel.LastUpdated.ToShortDateString()
+            </p>
+            <button type="button" class="btn btn-outline-primary" @onclick="(()=>IsEditMode=true)">Düzenle</button>
+            <button type="button" class="btn btn-outline-primary" @onclick="(()=>GiveALike(ToyModel.ToyId))">Beğendim</button>
+        </div>
+        <img class="card-img-bottom" src="@ToyModel.Photo" />
+    </div>
+}
+
+@code{
+    [Parameter]
+    public ToyModel ToyModel { get; set; }
+    bool IsEditMode { get; set; } = false;
+
+    private async void GiveALike(int toyId)
+    {
+        ToyModel.Like += 1;
+        await _toyService.UpdateAsync(ToyModel);
+        _appState.SetAppState(ToyModel);
+    }
+}

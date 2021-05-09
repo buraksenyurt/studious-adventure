@@ -1,0 +1,90 @@
+﻿@page "/main"
+@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+@implements IDisposable
+
+@if (Toys != null)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-8">
+                <h3>Öne Çıkan Oyuncak</h3>
+                <ViewToy ToyModel="ToyModel" />
+            </div>
+            <div class="col-4">
+                <div class="row">
+                    <h3>Popüler 5</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <ul>
+                                @foreach (var toy in Toys)
+                                {
+                                    <li>
+                                        <a href="javascript:void(0)" @onclick="(()=>ShowDetails(toy.ToyId))">@toy.Nickname</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3>Haberler</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@_toyService.NewToyNickName</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <p><em>Heyecanlı bir bekleyiş...</em></p>
+}
+
+@code{
+    private IEnumerable<ToyModel> Toys;
+    public ToyModel ToyModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _toyService.InitSignalR();
+        Toys = await _toyService.GetTopFiveAsync();
+        ToyModel = Toys.FirstOrDefault();
+
+        _toyService.NewToyNickName = ToyModel.Nickname;
+        _toyService.NewToyId = ToyModel.ToyId;
+        _toyService.OnChange += NewToyAdded;
+        _appState.OnChange += StateChanged;
+    }
+
+    private async void NewToyAdded()
+    {
+        Toys = await _toyService.GetTopFiveAsync();
+        StateHasChanged();
+    }
+
+    private async void StateChanged()
+    {
+        Toys = await _toyService.GetTopFiveAsync();
+        ToyModel = _appState.CurrentToy;
+        if (_toyService.NewToyId == _appState.CurrentToy.ToyId)
+            _toyService.NewToyNickName = _appState.CurrentToy.Nickname;
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _appState.OnChange -= StateHasChanged;
+        _toyService.OnChange -= StateHasChanged;
+    }
+
+    private void ShowDetails(int toyId)
+    {
+        ToyModel = Toys.FirstOrDefault(t => t.ToyId == toyId);
+    }
+} 
