@@ -1,0 +1,23 @@
+﻿@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+
+@if(IsPreviewMode)
+{
+    <ViewToy Toy="Toy"/>
+}
+else
+{
+    <EditForm Model="@Toy" OnValidSubmit="HandleValidSubmit">
+        <div class="card-body">
+            <DataAnnotationsValidator/>
+            Nickname : 
+            <InputText class="form-control" @bind-Value="Toy.Nickname"/>
+            Description :
+            <InputTextArea class="form-control" @bind-Value="Toy.Description"/>
+            <br/>
+            <button type="submit" class="btn btn-outline-primary">Kaydet</button>
+            <button type="button" class="btn btn-outline-light" @onclick="HandleUndoChanges">Geri Al</button>
+        </div>
+    </EditForm>
+}
