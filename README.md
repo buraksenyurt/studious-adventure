@@ -852,7 +852,7 @@ NavMenu bileşenini güncelle.
 
 Uygulamanın bu noktada aşağıdakine benzer şekilde çalıştığını teyit et.
 
-![.\assets\asset_01.png](.\assets\asset_01.png)
+![assets/asset_01.png](assets/asset_01.png)
 
 Kontroller _(Debug ederek ilerle)_
 
