@@ -457,7 +457,7 @@ dotnet sln add .\Toy.BlazorServer\
 
 ## 11 - Blazor Server projesine model sınıfının eklenmesi
 
-Data klasörüne Toy sınıfını ekle.
+Data klasörüne ToyModel sınıfını ekle.
 
 ```csharp
 using System;
@@ -465,7 +465,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Toy.BlazorServer.Data
 {
-    public class Toy
+    public class ToyModel
     {
         public int ToyId { get; set; }
         [Required]
@@ -516,16 +516,16 @@ namespace Toy.BlazorServer.Data
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<Toy>> GetTopFiveAsync()
+        public async Task<IEnumerable<ToyModel>> GetTopFiveAsync()
         {
             var response = await _httpClient.GetAsync("/api/toy/topfive");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<IEnumerable<Toy>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var data = JsonSerializer.Deserialize<IEnumerable<ToyModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return data;
         }
 
-        public async Task UpdateAsync(Toy toy)
+        public async Task UpdateAsync(ToyModel toy)
         {
             var response = await _httpClient.PutAsJsonAsync("/api/toy", toy);
             response.EnsureSuccessStatusCode();
@@ -593,10 +593,10 @@ namespace Toy.BlazorServer.Data
 {
     public class AppState
     {
-        public Toy CurrentToy { get; private set; }
+        public ToyModel CurrentToy { get; private set; }
         public event Action OnChange;
 
-        public void SetAppState(Toy toy)
+        public void SetAppState(ToyModel toy)
         {
             CurrentToy = toy;
             NotifyStateChanged();
@@ -613,9 +613,254 @@ AppState sınıfını DI Container servislerine kayıt et.(ConfigureServices met
 services.AddScoped<AppState>();
 ```
 
-## 14 -
+## 14 - Blazor Server uygulamasına temel Razor Component'lerinin eklenmesi
 
-## 15 - 
+Pages klasörüne EditToy.razor ve ViewToy.razor bileşenlerini ekle. 
+
+```csharp
+@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+
+@if(IsPreviewMode)
+{
+    <ViewToy ToyModel="ToyModel"/>
+}
+else
+{
+    <EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
+        <div class="card-body">
+            <DataAnnotationsValidator/>
+            Nickname : 
+            <InputText class="form-control" @bind-Value="ToyModel.Nickname"/>
+            Description :
+            <InputTextArea class="form-control" @bind-Value="ToyModel.Description"/>
+            <br/>
+            <button type="submit" class="btn btn-outline-primary">Kaydet</button>
+            <button type="button" class="btn btn-outline-light" @onclick="HandleUndoChanges">Geri Al</button>
+        </div>
+    </EditForm>
+}
+```
+
+EditToy.razor'ın kod tarının ayrı bir dosyada anlatmak için EditToy.cs isimli partial sınıfı ekle.
+
+```csharp
+using Microsoft.AspNetCore.Components;
+using System.Threading.Tasks;
+using Toy.BlazorServer.Data;
+
+namespace Toy.BlazorServer.Pages
+{
+    public partial class EditToy
+    {
+        [Parameter]
+        public ToyModel ToyModel { get; set; }
+        private ToyModel ToyBackup { get; set; }
+        public bool IsPreviewMode { get; set; } = false;
+
+        protected override void OnInitialized()
+        {
+            ToyBackup = new ToyModel
+            {
+                ToyId= ToyModel.ToyId,
+                Nickname= ToyModel.Nickname,
+                Description= ToyModel.Description,
+                Photo= ToyModel.Photo,
+                Like= ToyModel.Like,
+                LastUpdated= ToyModel.LastUpdated
+            };
+        }
+
+        protected async Task HandleValidSubmit()
+        {
+            await _toyService.UpdateAsync(ToyModel);
+            IsPreviewMode = true;
+            _appState.SetAppState(ToyModel);
+
+        }
+
+        protected void HandleUndoChanges()
+        {
+            IsPreviewMode = true;
+            if(ToyModel.Nickname.Trim()!=ToyBackup.Nickname.Trim()
+                || ToyModel.Description.Trim()!=ToyBackup.Description.Trim())
+            {
+                ToyModel = ToyBackup;
+                _appState.SetAppState(ToyBackup);
+            }
+        }
+    }
+}
+```
+
+ViewToy.razor bileşeni C# kodlarını üstünde taşıyor. Aşağıdaki gibi ekle.
+
+```csharp
+@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+
+@if (IsEditMode)
+{
+    <EditToy ToyModel="ToyModel" />
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">@ToyModel.Nickname</h4>
+            <p class="card-text">
+                <i>@ToyModel.Description</i>
+            </p>
+            <p>
+                <b>@ToyModel.Like</b> defa beğenildi.
+                <br />
+                Son güncelleme @ToyModel.LastUpdated.ToShortDateString()
+            </p>
+            <button type="button" class="btn btn-outline-primary" @onclick="(()=>IsEditMode=true)">Düzenle</button>
+            <button type="button" class="btn btn-outline-primary" @onclick="(()=>GiveALike(ToyModel.ToyId))">Beğendim</button>
+        </div>
+        <img class="card-img-bottom" src="@ToyModel.Photo" />
+    </div>
+}
+
+@code{
+    [Parameter]
+    public ToyModel ToyModel { get; set; }
+    bool IsEditMode { get; set; } = false;
+
+    private async void GiveALike(int toyId)
+    {
+        ToyModel.Like += 1;
+        await _toyService.UpdateAsync(ToyModel);
+        _appState.SetAppState(ToyModel);
+    }
+}
+```
+
+## 15 - Blazor Server uygulamasında ana bileşeni tasarla.
+
+Pages klasörü altına main.razor bileşenini ekle ve aşağıdaki gibi kodla.
+
+```csharp
+@page "/main"
+@using Toy.BlazorServer.Data
+@inject ToyService _toyService
+@inject AppState _appState
+@implements IDisposable
+
+@if (Toys != null)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-8">
+                <h3>Öne Çıkan Oyuncak</h3>
+                <ViewToy ToyModel="ToyModel" />
+            </div>
+            <div class="col-4">
+                <div class="row">
+                    <h3>Popüler 5</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <ul>
+                                @foreach (var toy in Toys)
+                                {
+                                    <li>
+                                        <a href="javascript:void(0)" @onclick="(()=>ShowDetails(toy.ToyId))">@toy.Nickname</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3>Haberler</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@_toyService.NewToyNickName</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <p><em>Heyecanlı bir bekleyiş...</em></p>
+}
+
+@code{
+    private IEnumerable<ToyModel> Toys;
+    public ToyModel ToyModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _toyService.InitSignalR();
+        Toys = await _toyService.GetTopFiveAsync();
+        ToyModel = Toys.FirstOrDefault();
+
+        _toyService.NewToyNickName = ToyModel.Nickname;
+        _toyService.NewToyId = ToyModel.ToyId;
+        _toyService.OnChange += NewToyAdded;
+        _appState.OnChange += StateChanged;
+    }
+
+    private async void NewToyAdded()
+    {
+        Toys = await _toyService.GetTopFiveAsync();
+        StateHasChanged();
+    }
+
+    private async void StateChanged()
+    {
+        Toys = await _toyService.GetTopFiveAsync();
+        ToyModel = _appState.CurrentToy;
+        if (_toyService.NewToyId == _appState.CurrentToy.ToyId)
+            _toyService.NewToyNickName = _appState.CurrentToy.Nickname;
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _appState.OnChange -= StateHasChanged;
+        _toyService.OnChange -= StateHasChanged;
+    }
+
+    private void ShowDetails(int toyId)
+    {
+        ToyModel = Toys.FirstOrDefault(t => t.ToyId == toyId);
+    }
+} 
+```
+
+NavMenu bileşenini güncelle.
+
+```html
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="main" Match="NavLinkMatch.All">
+                <span class="oi oi-list-rich" aria-hidden="true"></span>Oyuncak Şehri
+            </NavLink>
+        </li>
+    </ul>
+</div>
+```
+
+Uygulamanın bu noktada aşağıdakine benzer şekilde çalıştığını teyit et.
+
+![.\assets\asset_01.png](.\assets\asset_01.png)
+
+Kontroller _(Debug ederek ilerle)_
+
+- Oyuncak Şehri linkine tıklandığında oyuncaklar gelmeli.
+- Sağ tarafda en popüler oyuncaklar çıkmalı.
+- Bir oyuncağın başlık bilgisi değiştiğinde sağ taraftaki Popüler 5 ve Haberler kısımlarında da değişiklik olmalı.
+- Beğendim butonuna basıldığında beğenme sayısı artmalı.
+- Düzenle ile birkaç bilgi düzenlenip sonrasında Geri Al tuşuna basıldığında oyuncak bilgileri eski halinde kalmalı.
 
 ## 16 -
 
