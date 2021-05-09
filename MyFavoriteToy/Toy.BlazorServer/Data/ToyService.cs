@@ -20,16 +20,16 @@ namespace Toy.BlazorServer.Data
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<Toy>> GetTopFiveAsync()
+        public async Task<IEnumerable<ToyModel>> GetTopFiveAsync()
         {
             var response = await _httpClient.GetAsync("/api/toy/topfive");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<IEnumerable<Toy>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var data = JsonSerializer.Deserialize<IEnumerable<ToyModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return data;
         }
 
-        public async Task UpdateAsync(Toy toy)
+        public async Task UpdateAsync(ToyModel toy)
         {
             var response = await _httpClient.PutAsJsonAsync("/api/toy", toy);
             response.EnsureSuccessStatusCode();

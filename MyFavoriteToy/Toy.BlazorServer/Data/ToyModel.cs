@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Toy.BlazorServer.Data
 {
-    public class Toy
+    public class ToyModel
     {
         public int ToyId { get; set; }
         [Required]

@@ -4,10 +4,10 @@ namespace Toy.BlazorServer.Data
 {
     public class AppState
     {
-        public Toy CurrentToy { get; private set; }
+        public ToyModel CurrentToy { get; private set; }
         public event Action OnChange;
 
-        public void SetAppState(Toy toy)
+        public void SetAppState(ToyModel toy)
         {
             CurrentToy = toy;
             NotifyStateChanged();
