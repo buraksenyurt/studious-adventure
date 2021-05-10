@@ -983,4 +983,23 @@ Solution'daki üç projeyi de aynı anda başlayacak şekilde ayarla. _(Solution
 
 ![assets/asset_02.png](assets/asset_02.png)
 
+## 20 - Blazor Web Assembly PWA(Progressive Web App) Versiyonunun Eklenmesi
+
+```bash
+dotnet new blazorwasm -o Toy.BlazorWasmPWA --pwa
+dotnet sln add .\Toy.BlazorWasmPWA\
+```
+
+## 21 - Blazor Web Assembly PWA'ya Diğer Uygulamadaki Dosyaların Alınması
+
+- NewToyRequest dosyası taşınır, namespace değiştirilir.
+- Index.razor'un içi aynen taşınır.
+- NavMenu.razor eşitlenir.
+
+Blazor Server, Web API ve PWA uygulamaları başlayacak şekilde Solution ayarlanır. PWA tarayıcıda açıldığında sağ üstten Install seçeneği ile yüklenmesi sağlanır. Aşağıdaki gibi çalışıyor olması gerekir.
+
+![assets/asset_03.png](assets/asset_03.png)
+
+_Not: Offline çalışma desteği için öncelikle PWA uygulamasını host edileceği bir ortama Publish edilmesi gerekir._
+
 Kaynaklar : [ASP.NET Core 5 for Beginners](https://www.packtpub.com/product/asp-net-core-5-for-beginners/9781800567184?utm_source=github&utm_medium=repository&utm_campaign=9781800567184), Andreas Helland, Vincent Maverick Durano, Jeffrey Chilberto, Ed Price
