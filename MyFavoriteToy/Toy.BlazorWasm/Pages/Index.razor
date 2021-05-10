@@ -1,1 +1,66 @@
 ﻿@page "/"
+@inject HttpClient _httpClient
+
+@code{
+    NewToyRequest ToyModel = new NewToyRequest();
+    string photoData;
+    string statusMessage;
+    string errorMessage;
+    public async Task HandleValidSubmit()
+    {
+        ToyModel.Photo = photoData;
+        ToyModel.Like = 1;
+        await _httpClient.PostAsJsonAsync("https://localhost:44374/api/toy", ToyModel);
+    }
+    public async Task HandleFileSelection(InputFileChangeEventArgs args)
+    {
+        errorMessage = string.Empty;
+        var file = args.File;
+        if (file != null)
+        {
+            if (file.Size > (5 * 1024 * 1024))
+            {
+                errorMessage = "Bu dosya kapasitemin çok üstünde. En fazla 5 Mb dosya kabul edebilirim :(";
+            }
+
+            if (file.ContentType == "image/jpg" || file.ContentType == "image/jpeg" || file.ContentType == "image/png")
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream().ReadAsync(buffer);
+
+                photoData = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                statusMessage = "Oyuncak fotoğrafın yüklendi. Yii haa :)";
+            }
+            else
+            {
+                errorMessage = "Üzgünüm ama sadece jpg/jpeg/png uzantılı dosyalarla çalışıyorum.";
+                return;
+            }
+        }
+
+    }
+}
+
+<h1>Sevdiğim Bir Oyuncağımı Eklemek İstiyorum</h1>
+<EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
+    <div class="card">
+        <div class="card-body">
+            <DataAnnotationsValidator />
+            @*<ValidationSummary />*@
+            Fotoğraf Seç:
+            <InputFile OnChange="HandleFileSelection" />
+            <p class="alert-danger">@errorMessage</p>
+            <p class="alert-info">@statusMessage</p>
+            <p>
+                <img src="@photoData" style="width:250px;height:250px" />
+            </p>
+            Takma Adı:
+            <InputText class="form-control" id="nickName" @bind-Value="ToyModel.Nickname" />
+            <ValidationMessage For="@(()=>ToyModel.Nickname)" />
+            <InputTextArea class="form-control" id="description" @bind-Value="ToyModel.Description" />
+            <ValidationMessage For="@(()=>ToyModel.Description)" />
+            <br />
+            <button type="submit" class="btn btn-outline-primary oi-align-center">Gönder</button>
+        </div>
+    </div>
+</EditForm>
