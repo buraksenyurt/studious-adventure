@@ -10,12 +10,14 @@ else
 {
     <EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
         <div class="card-body">
-            <DataAnnotationsValidator/>
-            Nickname : 
-            <InputText class="form-control" @bind-Value="ToyModel.Nickname"/>
+            <DataAnnotationsValidator />
+            Nickname :
+            <InputText class="form-control" @bind-Value="ToyModel.Nickname" />
+            <ValidationMessage For="@(()=>ToyModel.Nickname)" />
             Description :
-            <InputTextArea class="form-control" @bind-Value="ToyModel.Description"/>
-            <br/>
+            <InputTextArea class="form-control" @bind-Value="ToyModel.Description" />
+            <ValidationMessage For="@(()=>ToyModel.Description)" />
+            <br />
             <button type="submit" class="btn btn-outline-primary">Kaydet</button>
             <button type="button" class="btn btn-outline-dark" @onclick="HandleUndoChanges">Geri Al</button>
         </div>

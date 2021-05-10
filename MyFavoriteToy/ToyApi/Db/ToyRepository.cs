@@ -26,7 +26,7 @@ namespace ToyApi.Db
 
         public IEnumerable<Toy> GetTopFive()
         {
-            var result = _dbContext.Toys.OrderBy(t => t.Like).Take(5);
+            var result = _dbContext.Toys.OrderByDescending(t => t.Like).Take(5);
             return result;
         }
 
