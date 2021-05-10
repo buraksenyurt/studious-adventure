@@ -445,7 +445,7 @@ services.AddCors(options =>
 Ayrıca Configure metodunda aşağıdaki satırı ekleyerek CORS middleware'ini etkinleştir.
 
 ```csharp
-app.UseCors();
+app.UseCors("AllowAll");
 ```
 
 ## 10 - Blazor Server Projesinin Oluşturulması
@@ -630,14 +630,16 @@ else
 {
     <EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
         <div class="card-body">
-            <DataAnnotationsValidator/>
-            Nickname : 
-            <InputText class="form-control" @bind-Value="ToyModel.Nickname"/>
+            <DataAnnotationsValidator />
+            Nickname :
+            <InputText class="form-control" @bind-Value="ToyModel.Nickname" />
+            <ValidationMessage For="@(()=>ToyModel.Nickname)" />
             Description :
-            <InputTextArea class="form-control" @bind-Value="ToyModel.Description"/>
-            <br/>
+            <InputTextArea class="form-control" @bind-Value="ToyModel.Description" />
+            <ValidationMessage For="@(()=>ToyModel.Description)" />
+            <br />
             <button type="submit" class="btn btn-outline-primary">Kaydet</button>
-            <button type="button" class="btn btn-outline-light" @onclick="HandleUndoChanges">Geri Al</button>
+            <button type="button" class="btn btn-outline-dark" @onclick="HandleUndoChanges">Geri Al</button>
         </div>
     </EditForm>
 }
@@ -862,7 +864,7 @@ Kontroller _(Debug ederek ilerle)_
 - Beğendim butonuna basıldığında beğenme sayısı artmalı.
 - Düzenle ile birkaç bilgi düzenlenip sonrasında Geri Al tuşuna basıldığında oyuncak bilgileri eski halinde kalmalı.
 
-## 16 - Blazor Web Assembly Projesini oluştur
+## 16 - Blazor Web Assembly Projesinin oluşturulması
 
 ```bash
 dotnet new blazorwasm -o Toy.BlazorWasm
@@ -871,6 +873,114 @@ dotnet sln add .\Toy.BlazorWasm\
 
 Template üstünden hazır gelen dosyaları sil. sample-data klasörü, Counter.razor, FetchData.Razor, SurveyPrompt.razor bileşenleri. NavMenu.razor'dan silinen bileşenlere ait sayfa linklerini kaldır.
 
-## 17 -
+## 17 - Blazor WASM projesinde DTO(Data Transform Object) oluşturulması
 
-//DEVAM EDİYOR
+root klasörde NewToyRequest isimli aşağıdaki sınıfı oluştur.
+
+```csharp
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Toy.BlazorWasm
+{
+    public class NewToyRequest
+    {
+        public int ToyId { get; set; }
+        [Required]
+        [MinLength(10, ErrorMessage = "Yaratıcı düşün. Güzel bir oyuncak adı ver")]
+        [MaxLength(30, ErrorMessage = "O kadar da uzun bir isim olmasın")]
+        public string Nickname { get; set; }
+        [Required]
+        [MinLength(20, ErrorMessage = "Yaratıcı düşün. Onun hakkında daha fazla şey söyle")]
+        [MaxLength(250, ErrorMessage = "O kadar da uzun bir açıklama olmasın")]
+        public string Description { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public int Like { get; set; }
+        public string Photo { get; set; }
+    }
+}
+```
+
+## 18 - Blazor WASM projesindeki Index bileşeninin yazılması
+
+```csharp
+@page "/"
+@inject HttpClient _httpClient
+
+@code{
+    NewToyRequest ToyModel = new NewToyRequest();
+    string photoData;
+    string statusMessage;
+    string errorMessage;
+    public async Task HandleValidSubmit()
+    {
+        ToyModel.Photo = photoData;
+        ToyModel.Like = 1;
+        await _httpClient.PostAsJsonAsync("https://localhost:44374/api/toy", ToyModel);
+    }
+    public async Task HandleFileSelection(InputFileChangeEventArgs args)
+    {
+        errorMessage = string.Empty;
+        var file = args.File;
+        if (file != null)
+        {
+            if (file.Size > (5 * 1024 * 1024))
+            {
+                errorMessage = "Bu dosya kapasitemin çok üstünde. En fazla 5 Mb dosya kabul edebilirim :(";
+            }
+
+            if (file.ContentType == "image/jpg" || file.ContentType == "image/jpeg" || file.ContentType == "image/png")
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream().ReadAsync(buffer);
+
+                photoData = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                statusMessage = "Oyuncak fotoğrafın yüklendi. Yii haa :)";
+            }
+            else
+            {
+                errorMessage = "Üzgünüm ama sadece jpg/jpeg/png uzantılı dosyalarla çalışıyorum.";
+                return;
+            }
+        }
+
+    }
+}
+
+<h1>Sevdiğim Bir Oyuncağımı Eklemek İstiyorum</h1>
+<EditForm Model="@ToyModel" OnValidSubmit="HandleValidSubmit">
+    <div class="card">
+        <div class="card-body">
+            <DataAnnotationsValidator />
+            @*<ValidationSummary />*@
+            Fotoğraf Seç:
+            <InputFile OnChange="HandleFileSelection" />
+            <p class="alert-danger">@errorMessage</p>
+            <p class="alert-info">@statusMessage</p>
+            <p>
+                <img src="@photoData" style="width:250px;height:250px" />
+            </p>
+            Takma Adı:
+            <InputText class="form-control" id="nickName" @bind-Value="ToyModel.Nickname" />
+            <ValidationMessage For="@(()=>ToyModel.Nickname)" />
+            <InputTextArea class="form-control" id="description" @bind-Value="ToyModel.Description" />
+            <ValidationMessage For="@(()=>ToyModel.Description)" />
+            <br />
+            <button type="submit" class="btn btn-outline-primary oi-align-center">Gönder</button>
+        </div>
+    </div>
+</EditForm>
+```
+
+## 19 - Komple Test
+
+Solution'daki üç projeyi de aynı anda başlayacak şekilde ayarla. _(Solution -> Properties -> Multiple startup projects)_
+
+- Blazor WASM uygulamasından fotoğraf ile birlikte yeni bir oyuncak yükle. Yüklenen oyuncak bilgileri Blazor Server uygulamasını güncellemeye gerek kalmadan oradaki ekrana yansımalı.
+- Beğendim tuşlarını kullanarak oyuncakların sıralamasının anlık olarak değişip değişmediğini gözlemle.
+- 5 Mb'tan büyük fotoğraf yüklemeye çalış.
+- Web API projesini durdurup yeni bir oyuncak eklemeye çalış.
+
+![assets/asset_02.png](assets/asset_02.png)
+
+Kaynaklar : [ASP.NET Core 5 for Beginners](https://www.packtpub.com/product/asp-net-core-5-for-beginners/9781800567184?utm_source=github&utm_medium=repository&utm_campaign=9781800567184), Andreas Helland, Vincent Maverick Durano, Jeffrey Chilberto, Ed Price
