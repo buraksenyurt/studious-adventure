@@ -862,7 +862,14 @@ Kontroller _(Debug ederek ilerle)_
 - Beğendim butonuna basıldığında beğenme sayısı artmalı.
 - Düzenle ile birkaç bilgi düzenlenip sonrasında Geri Al tuşuna basıldığında oyuncak bilgileri eski halinde kalmalı.
 
-## 16 -
+## 16 - Blazor Web Assembly Projesini oluştur
+
+```bash
+dotnet new blazorwasm -o Toy.BlazorWasm
+dotnet sln add .\Toy.BlazorWasm\
+```
+
+Template üstünden hazır gelen dosyaları sil. sample-data klasörü, Counter.razor, FetchData.Razor, SurveyPrompt.razor bileşenleri. NavMenu.razor'dan silinen bileşenlere ait sayfa linklerini kaldır.
 
 ## 17 -
 
