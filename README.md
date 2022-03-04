@@ -1003,3 +1003,51 @@ Blazor Server, Web API ve PWA uygulamaları başlayacak şekilde Solution ayarla
 _Not: Offline çalışma desteği için öncelikle PWA uygulamasını host edileceği bir ortama Publish edilmesi gerekir._
 
 Kaynaklar : [ASP.NET Core 5 for Beginners](https://www.packtpub.com/product/asp-net-core-5-for-beginners/9781800567184?utm_source=github&utm_medium=repository&utm_campaign=9781800567184), Andreas Helland, Vincent Maverick Durano, Jeffrey Chilberto, Ed Price
+
+## Ek - Ubuntu
+
+Üstünden epey zaman geçen bu eğitimi geçenlerde tekrar verdim. Windows bilgisayarımda problem çıktığı içinde Ubuntu üstüne almam gerekti. Ubuntu tarafında sadece .Net 6 yüklemişim. Bu sebepten proje dosyalarındaki 
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+```
+
+kısımlarını
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+```
+
+olarak değiştirdim. 
+
+Bazı paketlerin 5.x sürümleri bu versiyonda sorun çıkardığı için 6.x sürümlerine çekildi. Ubuntu tarafında IIS ve Visual Studio olmadığından multiple startup project teorisi çöktü ve CORS hataları ile başbaşa kaldım. Bunun üzerine _dotnet run_ ile projeleri ayağa kaldırırken, çağrı yapılan ve kullanılan port adreslerinde değişikliğe gittim. Ubuntu tarafında örneği test etmek isteyenler _dotnet run_ ile ilerleyebilirler.
+
+```bash
+# Web API
+# ToyApi altındayken
+# http://localhost:44374 adresinden ayağa kalkar.
+dotnet run
+
+# Server Side Blazor
+# Toy.BlazorServer klasöründeyken
+# https://localhost:5001/ adresinden ayağa kalkar.
+dotnet run
+
+# Client Side Blazor
+# Toy.BlazorWasm klasöründeyken
+# https://localhost:6001 adresinden ayağa kalkar.
+dotnet run 
+
+# PWA Blazor
+# Toy.BlazorWasmPWA klasöründeyken
+# https://localhost:7001 adresinden ayağa kalkar.
+dotnet run
+```
