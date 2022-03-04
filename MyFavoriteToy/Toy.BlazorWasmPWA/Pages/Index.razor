@@ -10,7 +10,7 @@
     {
         ToyModel.Photo = photoData;
         ToyModel.Like = 1;
-        await _httpClient.PostAsJsonAsync("https://localhost:44374/api/toy", ToyModel);
+        await _httpClient.PostAsJsonAsync("http://localhost:44374/api/toy", ToyModel);
     }
     public async Task HandleFileSelection(InputFileChangeEventArgs args)
     {
